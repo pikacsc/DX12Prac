@@ -505,10 +505,17 @@ bool InitD3D()
 	// a triangle
 	//Vertex(float x, float y, float z, float r, float g, float b, float a)
 	Vertex vList[] = {
+		// first square
 		{ -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f},
 		{ 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f},
 		{ -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f},
-		{ 0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 1.0f}
+		{ 0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 1.0f},
+
+		// second square
+		{ -0.75f, 0.75f, 0.7f, 0.0f, 1.0f, 0.0f, 1.0f },
+		{ 0.0f, 0.0f, 0.7f, 0.0f, 1.0f, 0.0f, 1.0f },
+		{ -0.75f, 0.0f, 0.7f, 0.0f, 1.0f, 0.0f, 1.0f},
+		{ 0.0f, 0.75f, 0.7f, 0.0f, 1.0f, 0.0f, 1.0f}
 	};
 
 	int vBufferSize = sizeof(vList);
@@ -607,6 +614,48 @@ bool InitD3D()
 
 	// transition the vertex buffer data from copy destination state to vertex buffer state
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+
+
+	// create the depth/stencil buffer
+
+	// create a depth stencil descriptor heap so we can get a pointer to the depth stencil buffer
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	hr = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsDescriptorHeap));
+	if (FAILED(hr))
+	{
+		Running = false;
+	}
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+	depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+	depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+	depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthOptimizedClearValue,
+		IID_PPV_ARGS(&depthStencilBuffer)
+	);
+	hr = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsDescriptorHeap));
+	if (FAILED(hr))
+	{
+		Running = false;
+	}
+	dsDescriptorHeap->SetName(L"Depth/Stencil Resource Heap");
+
+	device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
 
 	// Now we execute the command list to upload the initial assets ( triangle data )
 	commandList->Close();
@@ -720,7 +769,8 @@ void UpdatePipeline()
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView); // set the vertex buffer (using the vertex buffer view)
 	commandList->IASetIndexBuffer(&indexBufferView);
-	commandList->DrawIndexedInstanced(6, 1, 0, 0, 0); // draw 2 triangles ( draw 1 instance of 2 triangles )
+	commandList->DrawIndexedInstanced(6, 1, 0, 0, 0); // draw first square
+	commandList->DrawIndexedInstanced(6, 1, 0, 4, 0); // draw second square
 
 	/* 
 	transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a 
@@ -800,6 +850,9 @@ void Cleanup()
 	SAFE_RELEASE(rootSignature);
 	SAFE_RELEASE(vertexBuffer);
 	SAFE_RELEASE(indexBuffer);
+
+	SAFE_RELEASE(depthStencilBuffer);
+	SAFE_RELEASE(dsDescriptorHeap);
 }
 
 void WaitForPreviousFrame()
