@@ -192,7 +192,6 @@ bool InitD3D()
 		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 		{
 			// we don't want a software device
-			adapterIndex++;
 			continue;
 		}
 
@@ -345,8 +344,6 @@ bool InitD3D()
 
 
 
-	// command lists are created in the recording state. our main loop will set it up for recording again so close it now
-	//commandList->Close();
 
 
 
@@ -454,7 +451,7 @@ bool InitD3D()
 
 	// The input layout is used by the input Assembler so that it knows
 	// how to read the vertex data bound to it.
-	
+
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
@@ -476,7 +473,7 @@ bool InitD3D()
 	or different combinations of shaders, different blend states or different rasterizer states,
 	different topology types (point, line, triangle, patch), or a different number
 	of render targets you will need a pso
-	
+
 	VS is the only required shader for a pso. You might be wondering when a case would be where
 	You only set the VS. It's possible that you have a pso that only outputs data with the stream
 	output, and not on a render target, which means you would not need anything after the stream
@@ -504,13 +501,14 @@ bool InitD3D()
 	}
 
 	// Create Vertex buffer
-	
+
 	// a triangle
 	//Vertex(float x, float y, float z, float r, float g, float b, float a)
 	Vertex vList[] = {
-		{ 0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f},
+		{ -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f},
 		{ 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f},
 		{ -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f},
+		{ 0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 1.0f}
 	};
 
 	int vBufferSize = sizeof(vList);
@@ -560,8 +558,55 @@ bool InitD3D()
 
 
 	// transition the vertex buffer data from copy destination state to vertex buffer state
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
 
+
+	// Create index buffer
+
+	// a quad (2 triangles)
+	DWORD iList[] = {
+		0, 1, 2, // first triangle
+		0, 3, 1 // second triangle
+	};
+
+	int iBufferSize = sizeof(iList);
+
+	// create default heap to hold index buffer
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(iBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_COPY_DEST, // start in the copy destination state
+		nullptr, // optimized clear value must be null for this type of resource
+		IID_PPV_ARGS(&indexBuffer));
+
+	// we can give resource heaps a name so when we debug with the graphics debugger we know what resource we are looking at
+	indexBuffer->SetName(L"Index Buffer Resource Heap");
+
+	// create upload heap to upload index buffer
+	ID3D12Resource* iBufferUploadHeap;
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(iBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
+		nullptr,
+		IID_PPV_ARGS(&iBufferUploadHeap));
+	iBufferUploadHeap->SetName(L"Index Buffer Upload Resource Heap");
+
+	// store vertex buffer in upload heap
+	D3D12_SUBRESOURCE_DATA indexData = {};
+	indexData.pData = reinterpret_cast<BYTE*>(iList); // pointer to our index array
+	indexData.RowPitch = iBufferSize; // size of all our index buffer
+	indexData.SlicePitch = iBufferSize; // also the size of our index buffer
+
+	// we are now creating a command with the command list to copy the data from
+	// the upload heap to the default heap
+	UpdateSubresources(commandList, indexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
+
+
+	// transition the vertex buffer data from copy destination state to vertex buffer state
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 
 	// Now we execute the command list to upload the initial assets ( triangle data )
 	commandList->Close();
@@ -581,6 +626,11 @@ bool InitD3D()
 	vertexBufferView.StrideInBytes = sizeof(Vertex);
 	vertexBufferView.SizeInBytes = vBufferSize;
 
+
+	// create a index buffer view
+	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT; // 32-bit unsigned integer ( this is what a dword is, double word, a word is 2bytes)
+	indexBufferView.SizeInBytes = iBufferSize;
 
 	// Fill out the Viewport
 	viewport.TopLeftX = 0;
@@ -669,7 +719,8 @@ void UpdatePipeline()
 	commandList->RSSetScissorRects(1, &scissorRect); //set the scissor rects
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView); // set the vertex buffer (using the vertex buffer view)
-	commandList->DrawInstanced(3, 1, 0, 0); // finally draw 3 vertices ( draw the triangle )
+	commandList->IASetIndexBuffer(&indexBufferView);
+	commandList->DrawIndexedInstanced(6, 1, 0, 0, 0); // draw 2 triangles ( draw 1 instance of 2 triangles )
 
 	/* 
 	transition the "frameIndex" render target from the render target state to the present state. If the debug layer is enabled, you will receive a 
@@ -748,6 +799,7 @@ void Cleanup()
 	SAFE_RELEASE(pipelineStateObject);
 	SAFE_RELEASE(rootSignature);
 	SAFE_RELEASE(vertexBuffer);
+	SAFE_RELEASE(indexBuffer);
 }
 
 void WaitForPreviousFrame()
