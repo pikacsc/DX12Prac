@@ -9,6 +9,8 @@
 
 #### Step 3 : Adding Color
 
+#### Step 4 : Square, using Index Buffers
+
 <hr>
 
 ## Step 0 : Creating a window
@@ -32,3 +34,9 @@
 ## Step 3 : Adding Color
 
 [![Adding Color](https://user-images.githubusercontent.com/30831021/64958404-09262900-d8ca-11e9-9c75-6c3286595ebf.png "Adding Color")](https://github.com/pikacsc/DX12Prac/commit/afd39cea1bcb1972f4ba1c17cd99daa7a63a5148)
+
+<hr>
+
+## Step 4 : Square, using Index Buffers
+
+[![Square, using Index Buffers](https://user-images.githubusercontent.com/30831021/65369654-c332e180-dc8a-11e9-9775-906563f64df5.png "Square")](https://github.com/pikacsc/DX12Prac/commit/8add09652d95adc2489611967e9fec7d161d6d63)
