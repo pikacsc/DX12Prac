@@ -13,6 +13,8 @@
 
 #### Step 5 : Depth Testing
 
+#### Step 6 : Constant Buffers
+
 <hr>
 
 ## Step 0 : Creating a window
@@ -41,10 +43,16 @@
 
 ## Step 4 : Square, using Index Buffers
 
-[![Adding Color](https://user-images.githubusercontent.com/30831021/65369654-c332e180-dc8a-11e9-9775-906563f64df5.png "Square")](https://github.com/pikacsc/DX12Prac/commit/8add09652d95adc2489611967e9fec7d161d6d63)
+[![Square, using Index Buffers](https://user-images.githubusercontent.com/30831021/65369654-c332e180-dc8a-11e9-9775-906563f64df5.png "Square")](https://github.com/pikacsc/DX12Prac/commit/8add09652d95adc2489611967e9fec7d161d6d63)
 
 <hr>
 
 ## Step 5 : Depth Testing
 
-[![Adding Color](https://user-images.githubusercontent.com/30831021/65370400-4c4e1680-dc93-11e9-8350-6d4db63fe989.png "Depth Testing")](https://github.com/pikacsc/DX12Prac/commit/f66d9f2a1eba440f76c84255af19f4a5d681dd6c)
+[![Depth Testing](https://user-images.githubusercontent.com/30831021/65370400-4c4e1680-dc93-11e9-8350-6d4db63fe989.png "Depth Testing")](https://github.com/pikacsc/DX12Prac/commit/f66d9f2a1eba440f76c84255af19f4a5d681dd6c)
+
+<hr>
+
+## Step 6 : Constant Buffers
+
+[![Constant Buffers](https://user-images.githubusercontent.com/30831021/65382743-5c72fe00-dd46-11e9-939a-f6c5bb567d88.gif "Constant Buffers")](https://github.com/pikacsc/DX12Prac/commit/fa207ba13c6b246ecbcc6a7105f7d7b65cbe0285)
