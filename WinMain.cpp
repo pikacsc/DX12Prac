@@ -1,7 +1,9 @@
 #include "stdafx.h"
 
 struct Vertex {
+	Vertex(float x, float y, float z, float r, float g, float b, float a) : pos(x, y, z), color(r, g, b, z) {}
 	XMFLOAT3 pos;
+	XMFLOAT4 color;
 };
 
 
@@ -455,7 +457,8 @@ bool InitD3D()
 	
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 
 	// fill out an input layout description structure
@@ -503,10 +506,11 @@ bool InitD3D()
 	// Create Vertex buffer
 	
 	// a triangle
+	//Vertex(float x, float y, float z, float r, float g, float b, float a)
 	Vertex vList[] = {
-		{ {0.0f, 0.5f, 0.5f} },
-		{ {0.5f, -0.5f, 0.5f}},
-		{ {-0.5f, -0.5f, 0.5f}},
+		{ 0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f},
+		{ 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f},
+		{ -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f},
 	};
 
 	int vBufferSize = sizeof(vList);
