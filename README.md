@@ -15,6 +15,8 @@
 
 #### Step 6 : Constant Buffers
 
+#### Step 7 : Transformations World View Projection
+
 <hr>
 
 ## Step 0 : Creating a window
@@ -56,3 +58,9 @@
 ## Step 6 : Constant Buffers
 
 [![Constant Buffers](https://user-images.githubusercontent.com/30831021/65382743-5c72fe00-dd46-11e9-939a-f6c5bb567d88.gif "Constant Buffers")](https://github.com/pikacsc/DX12Prac/commit/fa207ba13c6b246ecbcc6a7105f7d7b65cbe0285)
+
+<hr>
+
+## Step 7 : Transformations World View Projection
+
+[![Transformations ...](https://user-images.githubusercontent.com/30831021/65500961-10b58580-defb-11e9-80c9-bc8ebaeabf99.gif "Transformations ...")](https://github.com/pikacsc/DX12Prac/commit/2b161c075b938dc88d1004571fdd1bbc315a0b30)
